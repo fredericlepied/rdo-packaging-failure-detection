@@ -55,11 +55,25 @@ while :; do
     project=$(jq -r .change.project "$workdir/$fname")
     basedir=$(basename $project)
     
+    # filter out the reviews we don't care about
+    
     case $basedir in
         deb-*|rpm-packaging)
+            rm -f "$workdir/$fname"
             continue
             ;;
     esac
+
+    if [ $(jq -r .change.branch "$workdir/$fname") != master ]; then
+        rm -f "$workdir/$fname"
+        continue
+    fi
+    
+    # remove the previous file for the same review if any
+    
+    rm -f "$faileddir/$fname" "$errordir/$fname"
+    
+    # do the check on the real repository
     
     if [ ! -d $gittopdir/$basedir ]; then
         git clone https://github.com/${project}.git $gittopdir/$basedir
