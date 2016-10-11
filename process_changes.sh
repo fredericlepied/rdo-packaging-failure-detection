@@ -15,20 +15,37 @@
 # under the License.
 
 function log() {
-    echo "$@" >> "$topdir/log"
+    echo "$@" >> "$topdir/changes.log"
 }
 
-if [ $# != 2 ]; then
-    echo "Usage: $0 <top dir dir> <git top dir>" 1>&2
+function process_review() {
+    result=$($(dirname $0)/process_review.py "$reviewdir/$fname")
+    log $project $fname $result
+    
+    case $result in
+        nochange)
+            rm "$reviewdir/$fname"
+            ;;
+        *)
+            mkdir -p "$topdir/$result"
+            mv "$reviewdir/$fname" "$topdir/$result"
+            ;;
+    esac
+}
+
+if [ $# != 1 ]; then
+    echo "Usage: $0 <top dir>" 1>&2
     exit 1
 fi
 
 topdir="$1"
-spooldir="$1/spool"
+eventdir="$1/event"
 workdir="$1/work"
-faileddir="$1/failed"
+reviewdir="$1/review"
+filelistdir="$1/filelist"
+requirementsdir="$1/requirements"
 errordir="$1/error"
-gittopdir="$2"
+logdir="$1/log"
 
 for dir in "$@"; do
     if [ ! -d "$dir" ]; then
@@ -39,19 +56,35 @@ done
 
 set -e
 
-mkdir -p $spooldir $workdir $faileddir $errordir
+mkdir -p $eventdir $workdir $filelistdir $requirementsdir $errordir $logdir $reviewdir
 
+exec 3>&1 4>&2
 set -x
 
+# process reviews
+
+echo "Processing reviews..."
+for fname in $(ls -rt "$reviewdir"); do
+    exec >> "$logdir/$fname.log" 2>&1
+    process_review
+    exec 1>&3 2>&4
+done
+
+# process events
+
+echo "Processing events..."
 while :; do
-    fname=$(ls -rt "$spooldir"|head -1)
-    if [ -z "$fname" -o ! -r "$spooldir/$fname" ]; then
+    exec 1>&3 2>&4
+    fname=$(ls -rt "$eventdir"|head -1)
+    if [ -z "$fname" -o ! -r "$eventdir/$fname" ]; then
         sleep 10
         continue
-    elif ! mv "$spooldir/$fname" "$workdir" 2> /dev/null; then
+    elif ! mv "$eventdir/$fname" "$workdir" 2> /dev/null; then
         continue
     fi
-
+    
+    exec >> "$logdir/$fname.log" 2>&1
+    
     project=$(jq -r .change.project "$workdir/$fname")
     basedir=$(basename $project)
     
@@ -60,47 +93,24 @@ while :; do
     case $basedir in
         deb-*|rpm-packaging)
             rm -f "$workdir/$fname"
+            log $project $fname skipped
             continue
             ;;
     esac
-
-    if [ $(jq -r .change.branch "$workdir/$fname") != master ]; then
-        rm -f "$workdir/$fname"
-        continue
-    fi
     
     # remove the previous file for the same review if any
     
-    rm -f "$faileddir/$fname" "$errordir/$fname"
-    
-    # do the check on the real repository
-    
-    if [ ! -d $gittopdir/$basedir ]; then
-        git clone https://github.com/${project}.git $gittopdir/$basedir
-    fi
+    rm -f "$filelistdir/$fname" "$requirementsdir/$fname" "$errordir/$fname"
 
-    cd $gittopdir/$basedir
-    git checkout .
-    git clean -dxf
-    if ! git review -d $fname; then
-        cd ..
-        rm -rf $basedir
-        git clone https://github.com/${project}.git $gittopdir/$basedir
-        cd $basedir
-        cd $gittopdir/$basedir
-        if ! git review -d $fname; then
-            mv "$workdir/$fname" "$errordir"
-            log $project $fname error
-            continue
-        fi
+    if ! ssh -p 29418 flepied@review.openstack.org gerrit query --format JSON --current-patch-set --files --commit-message -- $(jq -r .change.id "$workdir/$fname") branch:master > "$reviewdir/$fname"; then
+        mv "$workdir/$fname" "$errordir"
+        log $project $fname error
+        continue
     fi
-    if git show --oneline | egrep -q '^(\+\+\+|---) /dev/null'; then
-        mv "$workdir/$fname" "$faileddir"
-        log $project $fname failed
-    else
-        rm -f "$workdir/$fname"
-        log $project $fname success
-    fi
+    
+    rm "$workdir/$fname"
+
+    process_review
 done
 
 # process_changes.sh ends here
