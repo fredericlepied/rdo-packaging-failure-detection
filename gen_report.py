@@ -21,6 +21,8 @@ import os
 
 import jinja2
 import json
+from time import gmtime
+from time import strftime
 
 
 def process_dir(directory, reviews):
@@ -59,6 +61,11 @@ def jenkins_lowest_vote(review):
     return score
 
 
+def _jinja2_filter_strftime(date, fmt="%Y-%m-%d %H:%M:%S"):
+    gmdate = gmtime(date)
+    return "%s" % strftime(fmt, gmdate)
+
+
 def gen():
     reviews = []
     process_dir('requirements', reviews)
@@ -68,6 +75,7 @@ def gen():
     # configure jinja and filters
     jinja_env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(['.']))
+    jinja_env.filters["strftime"] = _jinja2_filter_strftime
     jinja_template = jinja_env.get_template("report.j2")
     content = jinja_template.render(reviews=reviews)
     with open('report.html', "w") as fp:

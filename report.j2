@@ -11,12 +11,14 @@
     </h1>
     <table id="dlrn">
       <tr>
+        <th>Date</th>
         <th>Project</th>
         <th>Review</th>
         <th>Summary</th>
       </tr>
       {% for review in reviews %}
         <tr>
+          <td>{{ review.lastUpdated | strftime }}</td>
           <td>{{ review.project }}</td>
           <td><a href="{{ review.url }}">{{ review.id }}</a></td>
           <td>{{ review.subject }}</td>
