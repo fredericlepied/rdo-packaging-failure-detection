@@ -31,6 +31,8 @@ if [ $(tail -1 current_reviews | jq -r .moreChanges) = true ]; then
     done
 fi
 
+mkdir -p review
+
 for f in current_reviews*; do
     $(dirname $0)/split_reviews.py review < $f
 done
