@@ -1,10 +1,11 @@
-Tools to detect potential packaging issues in OpenStack gerrit reviews
-======================================================================
+Tools to detect potential RDO packaging issues in OpenStack gerrit reviews
+==========================================================================
 
-First launch the MQTT event monitoring to be sure to miss no event::
+First launch the MQTT event monitoring from the OpenStack firehose to
+be sure to miss no event from OpenStack gerrit::
   
   $ virtualenv v
-  $ ./v/bin/activate
+  $ . v/bin/activate
   $ pip install -r requirements.txt
   $ ./monitor.py event
   
@@ -15,6 +16,7 @@ branch::
 
 Then you can process the reviews and events by launching::
   
+  $ . v/bin/activate
   $ ./process_changes.sh
 
 This will classify the reviews into 2 directories for the ones that
