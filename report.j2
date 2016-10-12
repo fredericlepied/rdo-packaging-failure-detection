@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Potential Packaging Issues</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <h1>
+      <i class='fa fa-chevron-circle-right pull-left'></i>
+      Potential Packaging Issues
+    </h1>
+    <table id="dlrn">
+      <tr>
+        <th>Project</th>
+        <th>Review</th>
+        <th>Summary</th>
+      </tr>
+      {% for review in reviews %}
+        <tr>
+          <td>{{ review.project }}</td>
+          <td><a href="{{ review.url }}">{{ review.id }}</a></td>
+          <td>{{ review.subject }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>
