@@ -18,10 +18,17 @@
 '''
 
 import json
+from rdopkg.actionmods import rdoinfo
 
 
-def process_line(line):
+def process_line(line, info):
     data = json.loads(line)
+
+    project = data['project'].split('/')[1]
+
+    if len([x for x in info['packages'] if x['project'] == project]) == 0:
+        return 'notinrdo'
+
     filelist = False
     if 'number' in data:
         for fdata in data['currentPatchSet']['files']:
@@ -42,8 +49,12 @@ def process_line(line):
 if __name__ == "__main__":
     import sys
 
+    inforepo = rdoinfo.get_default_inforepo()
+    inforepo.init()
+    info = inforepo.get_info()
+    
     with open(sys.argv[1]) as f:
         line = f.readline()
-    print process_line(line)
+    print process_line(line, info)
 
 # process_review.py ends here

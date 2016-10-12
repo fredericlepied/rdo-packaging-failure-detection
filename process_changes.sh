@@ -23,7 +23,7 @@ function process_review() {
     log $project $fname $result
     
     case $result in
-        nochange)
+        nochange|notinrdo)
             rm "$reviewdir/$fname"
             ;;
         *)
