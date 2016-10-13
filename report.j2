@@ -14,6 +14,7 @@
         <th>Date</th>
         <th>Project</th>
         <th>Review</th>
+        <th>Type</th>
         <th>Summary</th>
       </tr>
       {% for review in reviews %}
@@ -21,6 +22,7 @@
           <td>{{ review.lastUpdated | strftime }}</td>
           <td>{{ review.project }}</td>
           <td><a href="{{ review.url }}">{{ review.id }}</a></td>
+          <td>{{ review.directory }}</td>
           <td>{{ review.subject }}</td>
         </tr>
       {% endfor %}

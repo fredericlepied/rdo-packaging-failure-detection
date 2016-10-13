@@ -17,10 +17,20 @@ branch::
 Then you can process the reviews and events by launching::
   
   $ . v/bin/activate
-  $ ./process_changes.sh
+  $ ./process_changes.sh $PWD
 
 This will classify the reviews into 2 directories for the ones that
 could potentially cause packaging issues. ``requirements`` for reviews
 that are modifying their requirements so packages could need new
 dependencies. ``filelist`` for reviews that have added or removed
 files.
+
+To create an html report, just launch::
+  
+  $ . v/bin/activate
+  $ ./gen_report.py once
+
+To continuously generate the report, launch like this::
+
+  $ . v/bin/activate
+  $ ./gen_report.py

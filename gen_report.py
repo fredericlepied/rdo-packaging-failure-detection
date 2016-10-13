@@ -32,6 +32,7 @@ def process_dir(directory, reviews):
             path = os.path.join(dirpath, fname)
             with open(path) as f:
                 review = json.loads(f.readline())
+            review['directory'] = directory
             if ('wip' not in review['subject'].lower() and
                review['status'] == 'NEW' and
                jenkins_lowest_vote(review) != -2 and
@@ -81,6 +82,25 @@ def gen():
     with open('report.html', "w") as fp:
         fp.write(content)
 
-gen()
+if __name__ == '__main__':
+    import inotify.adapters
+    import sys
+
+    inotifier = inotify.adapters.Inotify()
+
+    gen()
+
+    # when called with an arg, just generate the report once and exit
+    if len(sys.argv) != 1:
+        sys.exit(0)
+    else:
+        inotifier.add_watch(b'filelist')
+        inotifier.add_watch(b'requirements')
+
+        for event in inotifier.event_gen():
+            # only react when a file is moved to the directories we
+            # are watching
+            if event is not None and 'IN_MOVED_TO' in event[1]:
+                gen()
 
 # gen_report.py ends here
