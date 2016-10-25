@@ -33,6 +33,8 @@ def process_dir(directory, reviews):
             with open(path) as f:
                 review = json.loads(f.readline())
             review['directory'] = directory
+            review['url'] = 'https://review.openstack.org/%d' % review['_number']
+            review['updated'] = review['updated'][:-len('.000000000')]
             if ('wip' not in review['subject'].lower() and
                review['status'] == 'NEW' and
                jenkins_lowest_vote(review) != -2 and
@@ -43,23 +45,17 @@ def process_dir(directory, reviews):
 
 
 def jenkins_vote(review):
-    if 'approvals' in review['currentPatchSet']:
-        for approval in review['currentPatchSet']['approvals']:
-            if approval['description'] == 'Verified':
-                return int(approval['value'])
+    if ('labels' in review and 'Verified' in review['labels'] and
+       'value' in review['labels']['Verified']):
+        return review['labels']['Verified']['value']
     return 0
 
 
 def jenkins_lowest_vote(review):
-    score = 3
-    if 'approvals' in review['currentPatchSet']:
-        for approval in review['currentPatchSet']['approvals']:
-            s = int(approval['value'])
-            if s < score:
-                score = s
-    if score == 3:
-        score = 0
-    return score
+    if ('labels' in review and 'Code-Review' in review['labels'] and
+       'value' in review['labels']['Code-Review']):
+        return review['labels']['Code-Review']['value']
+    return 0
 
 
 def _jinja2_filter_strftime(date, fmt="%Y-%m-%d %H:%M:%S"):
@@ -72,7 +68,7 @@ def gen():
     process_dir('requirements', reviews)
     process_dir('filelist', reviews)
     print len(reviews)
-    reviews = sorted(reviews, key=lambda k: k['lastUpdated'], reverse=True)
+    reviews = sorted(reviews, key=lambda k: k['updated'], reverse=True)
     # configure jinja and filters
     jinja_env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(['.']))

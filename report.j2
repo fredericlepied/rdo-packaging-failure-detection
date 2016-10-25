@@ -19,9 +19,9 @@
       </tr>
       {% for review in reviews %}
         <tr>
-          <td>{{ review.lastUpdated | strftime }}</td>
+          <td>{{ review.updated }}</td>
           <td>{{ review.project }}</td>
-          <td><a href="{{ review.url }}">{{ review.id }}</a></td>
+          <td><a href="{{ review.url }}">{{ review.change_id }}</a></td>
           <td>{{ review.directory }}</td>
           <td>{{ review.subject }}</td>
         </tr>

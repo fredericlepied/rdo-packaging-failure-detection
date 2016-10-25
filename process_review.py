@@ -30,14 +30,15 @@ def process_line(line, info):
         return 'notinrdo'
 
     filelist = False
-    if 'number' in data:
-        for fdata in data['currentPatchSet']['files']:
-            if fdata['file'] == '/COMMIT_MSG':
-                continue
-            if fdata['file'] == 'requirements.txt' or \
-               fdata['file'] == 'test-requirements.txt':
+    if 'current_revision' in data and 'revisions' in data:
+        files = data['revisions'][data['current_revision']]['files']
+        for fname in files:
+            if ((fname == 'requirements.txt' or
+                 fname == 'test-requirements.txt') and
+               data['subject'] != 'Updated from global requirements'):
                 return 'requirements'
-            if fdata['type'] == 'ADDED' or fdata['type'] == 'DELETED':
+            if ('status' in files[fname] and
+               fname[0:len('releasenotes')] != 'releasenotes'):
                 filelist = True
         if filelist:
             return 'filelist'
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     inforepo = rdoinfo.get_default_inforepo()
     inforepo.init()
     info = inforepo.get_info()
-    
+
     with open(sys.argv[1]) as f:
         line = f.readline()
     print process_line(line, info)

@@ -21,20 +21,16 @@ import json
 import os
 
 
-def process_line(line, spool_dir):
-    data = json.loads(line)
-    if 'number' in data:
-        fname = os.path.join(spool_dir, data['number'])
+def process_line(data, spool_dir):
+    if '_number' in data:
+        fname = os.path.join(spool_dir, str(data['_number']))
         with open(fname, 'w') as f:
-            f.write(line)
+            f.write(json.dumps(data))
 
 if __name__ == "__main__":
     import sys
 
-    while True:
-        line = sys.stdin.readline()
-        if line == '':
-            break
-        process_line(line, sys.argv[1])
+    for data in json.loads(sys.stdin.read()):
+        process_line(data, sys.argv[1])
 
 # split_reviews.py ends here

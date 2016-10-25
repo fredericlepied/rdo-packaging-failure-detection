@@ -1,3 +1,4 @@
 paho-mqtt
 rdopkg
 jinja2
+inotify

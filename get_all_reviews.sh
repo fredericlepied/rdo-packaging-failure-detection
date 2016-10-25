@@ -17,14 +17,16 @@
 set -x
 
 rm -f current_reviews*
-ssh -p 29418 flepied@review.openstack.org gerrit query --format JSON --current-patch-set --files --commit-message -- status:open branch:master > current_reviews
+curl -s -L 'https://review.openstack.org/changes/?q=status:open+branch:master&o=CURRENT_REVISION&o=CURRENT_FILES&o=LABELS' | sed 1d > current_reviews
 
-if [ $(tail -1 current_reviews | jq -r .moreChanges) = true ]; then
+limit=$(jq -r '. | length' current_reviews)
+
+if [ $(jq -r ".[$(($limit -1))]._more_changes" current_reviews) = true ]; then
     idx=1
-    limit=$(tail -1 current_reviews | jq -r .rowCount)
     while :; do
-        ssh -p 29418 flepied@review.openstack.org gerrit query --format JSON --current-patch-set --files --commit-message -S $(($idx * $limit)) -- status:open branch:master limit:$limit > current_reviews$idx
-        if [ $(tail -1 current_reviews$idx | jq -r .moreChanges) != true ]; then
+        curl -s -L "https://review.openstack.org/changes/?q=status:open+branch:master&o=CURRENT_REVISION&o=CURRENT_FILES&o=LABELS&S=$(($idx * $limit))" | sed 1d > current_reviews$idx
+        last=$(jq -r '. | length' current_reviews$idx)
+        if [ $(jq -r ".[$(($last -1))]._more_changes" current_reviews$idx) != true ]; then
             break
         fi
         idx=$(($idx + 1))

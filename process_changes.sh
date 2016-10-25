@@ -59,12 +59,12 @@ set -e
 mkdir -p $eventdir $workdir $filelistdir $requirementsdir $errordir $logdir $reviewdir
 
 exec 3>&1 4>&2
-set -x
 
 # process reviews
 
 echo "Processing reviews..."
 for fname in $(ls -rt "$reviewdir"); do
+    echo "Processing review $fname"
     exec >> "$logdir/$fname.log" 2>&1
     process_review
     exec 1>&3 2>&4
@@ -83,6 +83,7 @@ while :; do
         continue
     fi
     
+    echo "Processing event $fname"
     exec >> "$logdir/$fname.log" 2>&1
     
     project=$(jq -r .change.project "$workdir/$fname")
@@ -102,7 +103,7 @@ while :; do
     
     rm -f "$filelistdir/$fname" "$requirementsdir/$fname" "$errordir/$fname"
 
-    if ! ssh -p 29418 flepied@review.openstack.org gerrit query --format JSON --current-patch-set --files --commit-message -- $(jq -r .change.id "$workdir/$fname") branch:master > "$reviewdir/$fname"; then
+    if ! curl -s -L "https://review.openstack.org/changes/?q=$(jq -r .change.id "$workdir/$fname")+branch:master&o=CURRENT_REVISION&o=CURRENT_FILES&o=LABELS" | sed 1d > "$reviewdir/$fname"; then
         mv "$workdir/$fname" "$errordir"
         log $project $fname error
         continue
