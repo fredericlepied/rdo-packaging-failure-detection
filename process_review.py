@@ -55,7 +55,7 @@ if __name__ == "__main__":
     info = inforepo.get_info()
 
     with open(sys.argv[1]) as f:
-        line = f.readline()
+        line = f.read(-1)
     print process_line(line, info)
 
 # process_review.py ends here

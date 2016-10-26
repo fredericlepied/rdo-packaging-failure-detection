@@ -103,7 +103,7 @@ while :; do
     
     rm -f "$filelistdir/$fname" "$requirementsdir/$fname" "$errordir/$fname"
 
-    if ! curl -s -L "https://review.openstack.org/changes/?q=$(jq -r .change.id "$workdir/$fname")+branch:master&o=CURRENT_REVISION&o=CURRENT_FILES&o=LABELS" | sed 1d > "$reviewdir/$fname"; then
+    if ! curl -s -L "https://review.openstack.org/changes/?q=$(jq -r .change.id "$workdir/$fname")+branch:master&o=CURRENT_REVISION&o=CURRENT_FILES&o=LABELS" | sed 1d | jq '.[0]'> "$reviewdir/$fname"; then
         mv "$workdir/$fname" "$errordir"
         log $project $fname error
         continue

@@ -31,7 +31,7 @@ def process_dir(directory, reviews):
         for fname in filenames:
             path = os.path.join(dirpath, fname)
             with open(path) as f:
-                review = json.loads(f.readline())
+                review = json.loads(f.read(-1))
             review['directory'] = directory
             review['url'] = 'https://review.openstack.org/%d' % review['_number']
             review['updated'] = review['updated'][:-len('.000000000')]
