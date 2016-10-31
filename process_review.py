@@ -28,7 +28,11 @@ def jenkins_vote(review):
     return 0
 
 
-def jenkins_lowest_vote(review):
+def gerrit_lowest_vote(review):
+    if ('labels' in review and 'Code-Review' in review['labels'] and
+       'blocking' in review['labels']['Code-Review'] and
+       review['labels']['Code-Review']['blocking']):
+        return -2
     if ('labels' in review and 'Code-Review' in review['labels'] and
        'value' in review['labels']['Code-Review']):
         return review['labels']['Code-Review']['value']
@@ -38,13 +42,18 @@ def jenkins_lowest_vote(review):
 def process_line(line, info):
     data = json.loads(line)
 
-    if (jenkins_lowest_vote(data) == -2 or
+    if (gerrit_lowest_vote(data) == -2 or
        jenkins_vote(data) == -1):
         return 'lowscore'
 
-    project = data['project'].split('/')[1]
+    # Needed for oslo projects reported as oslo.utils for ex.
+    project = data['project'].split('/')[1].replace('.', '-')
 
-    if len([x for x in info['packages'] if x['project'] == project]) == 0:
+    # Use the same heuristic as in map-project-name from DLRN to get
+    # the package name from the project name
+    if len([x for x in info['packages'] if x['project'] == project or
+            x['name'].endswith(project) or
+            x['project'].endswith(project)]) == 0:
         return 'notinrdo'
 
     filelist = False

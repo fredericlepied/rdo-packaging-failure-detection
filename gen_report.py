@@ -24,6 +24,9 @@ import json
 from time import gmtime
 from time import strftime
 
+from process_review import gerrit_lowest_vote
+from process_review import jenkins_vote
+
 
 def process_dir(directory, reviews):
     count = 0
@@ -39,25 +42,11 @@ def process_dir(directory, reviews):
             review['updated'] = review['updated'][:-len('.000000000')]
             if ('wip' not in review['subject'].lower() and
                review['status'] == 'NEW' and
-               jenkins_lowest_vote(review) != -2 and
+               gerrit_lowest_vote(review) != -2 and
                jenkins_vote(review) == 1):
                 reviews.append(review)
                 count += 1
     return count
-
-
-def jenkins_vote(review):
-    if ('labels' in review and 'Verified' in review['labels'] and
-       'value' in review['labels']['Verified']):
-        return review['labels']['Verified']['value']
-    return 0
-
-
-def jenkins_lowest_vote(review):
-    if ('labels' in review and 'Code-Review' in review['labels'] and
-       'value' in review['labels']['Code-Review']):
-        return review['labels']['Code-Review']['value']
-    return 0
 
 
 def _jinja2_filter_strftime(date, fmt="%Y-%m-%d %H:%M:%S"):
