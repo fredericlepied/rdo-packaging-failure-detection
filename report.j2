@@ -14,7 +14,6 @@
         <th>Date</th>
         <th>Project</th>
         <th>Review</th>
-        <th>Type</th>
         <th>Summary</th>
       </tr>
       {% for review in reviews %}
@@ -22,8 +21,7 @@
           <td>{{ review.updated }}</td>
           <td>{{ review.project }}</td>
           <td><a href="{{ review.url }}">{{ review.change_id }}</a></td>
-          <td>{{ review.directory }}</td>
-          <td>{{ review.subject }}</td>
+          <td><a href="repos/{{ review.sha1 }}_dev/rpmbuild.log">{{ review.subject }}</a></td>
         </tr>
       {% endfor %}
     </table>

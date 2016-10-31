@@ -21,8 +21,26 @@ import json
 from rdopkg.actionmods import rdoinfo
 
 
+def jenkins_vote(review):
+    if ('labels' in review and 'Verified' in review['labels'] and
+       'value' in review['labels']['Verified']):
+        return review['labels']['Verified']['value']
+    return 0
+
+
+def jenkins_lowest_vote(review):
+    if ('labels' in review and 'Code-Review' in review['labels'] and
+       'value' in review['labels']['Code-Review']):
+        return review['labels']['Code-Review']['value']
+    return 0
+
+
 def process_line(line, info):
     data = json.loads(line)
+
+    if (jenkins_lowest_vote(data) == -2 or
+       jenkins_vote(data) == -1):
+        return 'lowscore'
 
     project = data['project'].split('/')[1]
 

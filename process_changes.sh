@@ -23,7 +23,7 @@ function process_review() {
     log $project $fname $result
     
     case $result in
-        nochange|notinrdo)
+        nochange|notinrdo|lowscore)
             rm "$reviewdir/$fname"
             ;;
         *)
@@ -53,8 +53,6 @@ for dir in "$@"; do
         exit 1
     fi
 done
-
-set -e
 
 mkdir -p $eventdir $workdir $filelistdir $requirementsdir $errordir $logdir $reviewdir
 

@@ -33,6 +33,8 @@ def process_dir(directory, reviews):
             with open(path) as f:
                 review = json.loads(f.read(-1))
             review['directory'] = directory
+            sha1 = review['revisions'].keys()[0]
+            review['sha1'] = '%s/%s/%s' % (sha1[0:2], sha1[2:4], sha1)
             review['url'] = 'https://review.openstack.org/%d' % review['_number']
             review['updated'] = review['updated'][:-len('.000000000')]
             if ('wip' not in review['subject'].lower() and
@@ -65,8 +67,7 @@ def _jinja2_filter_strftime(date, fmt="%Y-%m-%d %H:%M:%S"):
 
 def gen():
     reviews = []
-    process_dir('requirements', reviews)
-    process_dir('filelist', reviews)
+    process_dir('failed', reviews)
     print len(reviews)
     reviews = sorted(reviews, key=lambda k: k['updated'], reverse=True)
     # configure jinja and filters
@@ -90,8 +91,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 1:
         sys.exit(0)
     else:
-        inotifier.add_watch(b'filelist')
-        inotifier.add_watch(b'requirements')
+        inotifier.add_watch(b'failed')
 
         for event in inotifier.event_gen():
             # only react when a file is moved to the directories we
